@@ -1,0 +1,11 @@
+.DS_Store
+data/eeg/
+/data/
+/at_home_data/
+/behavioural_data/
+__pycache__/
+*.pyc
+*.swp
+
+*.bdf
+*.fif
