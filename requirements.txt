@@ -1,0 +1,7 @@
+numpy
+pingouin
+scipy
+matplotlib
+pandas
+neurokit2
+ipympl
