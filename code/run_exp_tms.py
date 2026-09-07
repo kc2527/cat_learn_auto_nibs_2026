@@ -591,26 +591,22 @@ if __name__ == "__main__":
                 win.callOnFlip(
                     lambda: flip_times.__setitem__(
                         "t_trial_onset", global_clock.getTime()))
-
-                if current_trial["pulse_1_ms"] == 0:
-                    pulse_1_code = (
-                        TRIG[current_trial["pulse_1_device"]] |
-                        TRIG[f"{current_trial['pulse_1_device']}_LABEL"]
-                    )
-                    trigger_port.flip_pulse(
-                        pulse_1_code, global_clock=global_clock)
-                    win.callOnFlip(
-                        lambda: flip_times.__setitem__(
-                            "t_pulse_1", global_clock.getTime()))
-                    pulse_1_sent = True
                 state_entry = False
 
-            time_state = state_clock.getTime() * 1000.0
+                fix_h.draw()
+                fix_v.draw()
+                win.flip()
+                continue
 
             fix_h.draw()
             fix_v.draw()
 
-            if not pulse_1_sent and time_state >= current_trial["pulse_1_ms"]:
+            if not pulse_1_sent:
+                wait_s = (
+                    current_trial["pulse_1_ms"] / 1000.0 -
+                    state_clock.getTime())
+                if wait_s > 0:
+                    core.wait(wait_s, hogCPUperiod=0.005)
                 pulse_1_code = (
                     TRIG[current_trial["pulse_1_device"]] |
                     TRIG[f"{current_trial['pulse_1_device']}_LABEL"]
@@ -619,8 +615,17 @@ if __name__ == "__main__":
                 flip_times["t_pulse_1"] = global_clock.getTime()
                 pulse_1_sent = True
 
-            if (current_trial["pulse_2_device"] and not pulse_2_sent and
-                    time_state >= current_trial["pulse_2_ms"]):
+                core.wait(
+                    TMS_TRIGGER_DEFAULT_PULSE_MS / 1000.0,
+                    hogCPUperiod=0.005)
+                trigger_port.update(global_clock)
+
+            if current_trial["pulse_2_device"] and not pulse_2_sent:
+                wait_s = (
+                    current_trial["pulse_2_ms"] / 1000.0 -
+                    state_clock.getTime())
+                if wait_s > 0:
+                    core.wait(wait_s, hogCPUperiod=0.005)
                 pulse_2_code = (
                     TRIG[current_trial["pulse_2_device"]] |
                     TRIG[f"{current_trial['pulse_2_device']}_LABEL"]
@@ -628,6 +633,11 @@ if __name__ == "__main__":
                 trigger_port.pulse_now(pulse_2_code, global_clock=global_clock)
                 flip_times["t_pulse_2"] = global_clock.getTime()
                 pulse_2_sent = True
+
+                core.wait(
+                    TMS_TRIGGER_DEFAULT_PULSE_MS / 1000.0,
+                    hogCPUperiod=0.005)
+                trigger_port.update(global_clock)
 
             if pulse_1_sent and (not current_trial["pulse_2_device"] or pulse_2_sent):
                 state_current = "state_save_trial"
@@ -655,11 +665,18 @@ if __name__ == "__main__":
                 win.callOnFlip(kb.clock.reset)
                 state_entry = False
 
-            time_state = stim_clock.getTime() * 1000.0
+                grating.draw()
+                win.flip()
+                continue
 
             grating.draw()
 
-            if not pulse_1_sent and time_state >= current_trial["pulse_1_ms"]:
+            if not pulse_1_sent:
+                wait_s = (
+                    current_trial["pulse_1_ms"] / 1000.0 -
+                    stim_clock.getTime())
+                if wait_s > 0:
+                    core.wait(wait_s, hogCPUperiod=0.005)
                 pulse_1_code = (
                     TRIG[current_trial["pulse_1_device"]] |
                     TRIG[f"{current_trial['pulse_1_device']}_LABEL"]
@@ -668,8 +685,17 @@ if __name__ == "__main__":
                 flip_times["t_pulse_1"] = global_clock.getTime()
                 pulse_1_sent = True
 
-            if (current_trial["pulse_2_device"] and not pulse_2_sent and
-                    time_state >= current_trial["pulse_2_ms"]):
+                core.wait(
+                    TMS_TRIGGER_DEFAULT_PULSE_MS / 1000.0,
+                    hogCPUperiod=0.005)
+                trigger_port.update(global_clock)
+
+            if current_trial["pulse_2_device"] and not pulse_2_sent:
+                wait_s = (
+                    current_trial["pulse_2_ms"] / 1000.0 -
+                    stim_clock.getTime())
+                if wait_s > 0:
+                    core.wait(wait_s, hogCPUperiod=0.005)
                 pulse_2_code = (
                     TRIG[current_trial["pulse_2_device"]] |
                     TRIG[f"{current_trial['pulse_2_device']}_LABEL"]
@@ -677,6 +703,11 @@ if __name__ == "__main__":
                 trigger_port.pulse_now(pulse_2_code, global_clock=global_clock)
                 flip_times["t_pulse_2"] = global_clock.getTime()
                 pulse_2_sent = True
+
+                core.wait(
+                    TMS_TRIGGER_DEFAULT_PULSE_MS / 1000.0,
+                    hogCPUperiod=0.005)
+                trigger_port.update(global_clock)
 
             pulses_complete = (
                 pulse_1_sent and
