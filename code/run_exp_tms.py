@@ -103,11 +103,27 @@ M1_ICF_BLOCK = {
     "setup_text": "Bistim2 coil: M1\nSet Bistim interval: 15 ms\nRapid2: not used",
 }
 
-M1_TEST_BLOCK = {
-    "name": "M1 single-pulse rest",
+M1_TEST_PRE_ICI_BLOCK = {
+    "name": "M1 single-pulse pre-ICI rest",
     "kind": "m1_test",
     "site": "M1",
-    "n_trials": 30,
+    "n_trials": 10,
+    "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
+}
+
+M1_TEST_BETWEEN_BLOCK = {
+    "name": "M1 single-pulse between ICI and ICF rest",
+    "kind": "m1_test",
+    "site": "M1",
+    "n_trials": 10,
+    "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
+}
+
+M1_TEST_POST_ICF_BLOCK = {
+    "name": "M1 single-pulse post-ICF rest",
+    "kind": "m1_test",
+    "site": "M1",
+    "n_trials": 10,
     "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
 }
 
@@ -235,9 +251,11 @@ if __name__ == "__main__":
             V1_TASK_BLOCK,
             VERTEX_REST_BLOCK,
             VERTEX_TASK_BLOCK,
+            M1_TEST_PRE_ICI_BLOCK,
             M1_ICI_BLOCK,
+            M1_TEST_BETWEEN_BLOCK,
             M1_ICF_BLOCK,
-            M1_TEST_BLOCK,
+            M1_TEST_POST_ICF_BLOCK,
         ]
     else:
         tms_blocks = [
@@ -245,9 +263,11 @@ if __name__ == "__main__":
             VERTEX_TASK_BLOCK,
             V1_REST_BLOCK,
             V1_TASK_BLOCK,
+            M1_TEST_PRE_ICI_BLOCK,
             M1_ICI_BLOCK,
+            M1_TEST_BETWEEN_BLOCK,
             M1_ICF_BLOCK,
-            M1_TEST_BLOCK,
+            M1_TEST_POST_ICF_BLOCK,
         ]
 
     n_total = sum(block["n_trials"] for block in tms_blocks)
@@ -289,7 +309,7 @@ if __name__ == "__main__":
         elif block["kind"] == "m1_icf":
             trial_types = ["icf"] * 30
         else:
-            trial_types = ["test_alone"] * 30
+            trial_types = ["test_alone"] * block["n_trials"]
         if len(set(trial_types)) > 1:
             schedule_rng.shuffle(trial_types)
 
@@ -488,10 +508,12 @@ if __name__ == "__main__":
                 block_num = int(trials["block_num"].iloc[next_trial])
                 block = tms_blocks[block_num - 1]
                 break_text.text = (
-                    "Remember to rearm TMS machines.\n\n"
+                    "Break. Rearm both stimulators.\n\n"
                     f"Block {block_num}: {block['name']}\n\n"
                     f"{block['setup_text']}\n\n"
-                    "Press the space bar when ready to begin."
+                    "Operator: confirm coil positions and intensities "
+                    "against the session record.\n\n"
+                    "Press space when the participant is ready."
                 )
                 state_entry = False
 
@@ -508,9 +530,9 @@ if __name__ == "__main__":
         elif state_current == "state_break":
             if state_entry:
                 break_text.text = (
-                    "Remember to rearm TMS machines.\n\n"
-                    "Take a short break.\n\n"
-                    "Press the space bar when ready to continue."
+                    "Short break.\n\n"
+                    "Rest your eyes and let your hand relax completely.\n\n"
+                    "Press space when you are ready to continue."
                 )
                 state_entry = False
 
