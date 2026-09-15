@@ -168,6 +168,7 @@ if __name__ == "__main__":
 
     lab_day_answer = ""
     lab_day_error = ""
+    lab_day_answered = False
     lab_day_prompt = visual.TextStim(
         win,
         text="",
@@ -199,15 +200,20 @@ if __name__ == "__main__":
                 if lab_day_answer == "yes":
                     session_tag = "post_lab"
                     n_train = 200
+                    lab_day_answered = True
                     break
                 if lab_day_answer == "no":
                     session_tag = "norm_home"
                     n_train = 400
+                    lab_day_answered = True
                     break
                 lab_day_error = "\nPlease type yes or no."
             elif key in {"y", "e", "s", "n", "o"} and len(lab_day_answer) < 3:
                 lab_day_answer += key
                 lab_day_error = ""
+
+        if lab_day_answered:
+            break
 
     n_test = 0
     n_total = n_train + n_test
