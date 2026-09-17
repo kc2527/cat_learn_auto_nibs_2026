@@ -59,7 +59,7 @@ V1_REST_BLOCK = {
     "name": "V1 to M1 rest",
     "kind": "rest",
     "site": "V1",
-    "n_trials": 50,
+    "n_trials": 25,
     "setup_text": "Rapid2 coil: V1\nBistim2 coil: M1",
 }
 
@@ -67,7 +67,7 @@ V1_TASK_BLOCK = {
     "name": "V1 to M1 task",
     "kind": "task",
     "site": "V1",
-    "n_trials": 100,
+    "n_trials": 50,
     "setup_text": "Rapid2 coil: V1\nBistim2 coil: M1",
 }
 
@@ -75,7 +75,7 @@ VERTEX_REST_BLOCK = {
     "name": "Vertex to M1 rest",
     "kind": "rest",
     "site": "Vertex",
-    "n_trials": 50,
+    "n_trials": 25,
     "setup_text": "Rapid2 coil: Vertex\nBistim2 coil: M1",
 }
 
@@ -83,48 +83,8 @@ VERTEX_TASK_BLOCK = {
     "name": "Vertex to M1 task",
     "kind": "task",
     "site": "Vertex",
-    "n_trials": 100,
+    "n_trials": 50,
     "setup_text": "Rapid2 coil: Vertex\nBistim2 coil: M1",
-}
-
-M1_ICI_BLOCK = {
-    "name": "M1 to M1 ICI rest",
-    "kind": "m1_ici",
-    "site": "M1",
-    "n_trials": 30,
-    "setup_text": "Bistim2 coil: M1\nSet Bistim interval: 5 ms\nRapid2: not used",
-}
-
-M1_ICF_BLOCK = {
-    "name": "M1 to M1 ICF rest",
-    "kind": "m1_icf",
-    "site": "M1",
-    "n_trials": 30,
-    "setup_text": "Bistim2 coil: M1\nSet Bistim interval: 15 ms\nRapid2: not used",
-}
-
-M1_TEST_PRE_ICI_BLOCK = {
-    "name": "M1 single-pulse pre-ICI rest",
-    "kind": "m1_test",
-    "site": "M1",
-    "n_trials": 10,
-    "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
-}
-
-M1_TEST_BETWEEN_BLOCK = {
-    "name": "M1 single-pulse between ICI and ICF rest",
-    "kind": "m1_test",
-    "site": "M1",
-    "n_trials": 10,
-    "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
-}
-
-M1_TEST_POST_ICF_BLOCK = {
-    "name": "M1 single-pulse post-ICF rest",
-    "kind": "m1_test",
-    "site": "M1",
-    "n_trials": 10,
-    "setup_text": "Bistim2 coil: M1\nSet Bistim to single-pulse mode\nRapid2: not used",
 }
 
 PID_DIGITS = 3
@@ -251,11 +211,6 @@ if __name__ == "__main__":
             V1_TASK_BLOCK,
             VERTEX_REST_BLOCK,
             VERTEX_TASK_BLOCK,
-            M1_TEST_PRE_ICI_BLOCK,
-            M1_ICI_BLOCK,
-            M1_TEST_BETWEEN_BLOCK,
-            M1_ICF_BLOCK,
-            M1_TEST_POST_ICF_BLOCK,
         ]
     else:
         tms_blocks = [
@@ -263,11 +218,6 @@ if __name__ == "__main__":
             VERTEX_TASK_BLOCK,
             V1_REST_BLOCK,
             V1_TASK_BLOCK,
-            M1_TEST_PRE_ICI_BLOCK,
-            M1_ICI_BLOCK,
-            M1_TEST_BETWEEN_BLOCK,
-            M1_ICF_BLOCK,
-            M1_TEST_POST_ICF_BLOCK,
         ]
 
     n_total = sum(block["n_trials"] for block in tms_blocks)
@@ -301,15 +251,19 @@ if __name__ == "__main__":
     stim_index = 0
     for block_num, block in enumerate(tms_blocks, start=1):
         if block["kind"] == "rest":
-            trial_types = ["conditioned"] * 25 + ["test_alone"] * 25
+            n_conditioned = block["n_trials"] // 2
+            trial_types = (
+                ["conditioned"] * n_conditioned +
+                ["test_alone"] * (block["n_trials"] - n_conditioned)
+            )
         elif block["kind"] == "task":
-            trial_types = ["conditioned"] * 50 + ["test_alone"] * 50
-        elif block["kind"] == "m1_ici":
-            trial_types = ["ici"] * 30
-        elif block["kind"] == "m1_icf":
-            trial_types = ["icf"] * 30
+            n_conditioned = block["n_trials"] // 2
+            trial_types = (
+                ["conditioned"] * n_conditioned +
+                ["test_alone"] * (block["n_trials"] - n_conditioned)
+            )
         else:
-            trial_types = ["test_alone"] * block["n_trials"]
+            raise RuntimeError(f"Unknown laboratory block kind: {block['kind']}")
         if len(set(trial_types)) > 1:
             schedule_rng.shuffle(trial_types)
 
@@ -357,22 +311,13 @@ if __name__ == "__main__":
                 else:
                     row["pulse_1_device"] = "BISTIM"
                     row["pulse_1_ms"] = 90
-            elif block["kind"] == "m1_ici":
-                row["pulse_1_device"] = "BISTIM"
-                row["pulse_1_ms"] = 0
-                row["isi_ms"] = 5
-            elif block["kind"] == "m1_icf":
-                row["pulse_1_device"] = "BISTIM"
-                row["pulse_1_ms"] = 0
-                row["isi_ms"] = 15
             else:
-                row["pulse_1_device"] = "BISTIM"
-                row["pulse_1_ms"] = 0
+                raise RuntimeError(f"Unknown laboratory block kind: {block['kind']}")
 
             trial_rows.append(row)
 
     trials = pd.DataFrame(trial_rows)
-    if len(trials) != n_total or stim_index != 200:
+    if len(trials) != n_total or stim_index != 100:
         raise RuntimeError("The laboratory trial schedule has the wrong size.")
 
     trial = n_done - 1
